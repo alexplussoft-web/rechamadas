@@ -10,3 +10,9 @@ export type StatusInfo = {
   statusAntigo: string;
   statusAtual: string;
 };
+
+export type InfoInteracao = {
+  statusAntigo: string;
+  statusAtual: string;
+  operadorDaAcao: string;
+};

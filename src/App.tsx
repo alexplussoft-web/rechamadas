@@ -1,5 +1,9 @@
 import { useState, type ChangeEvent } from "react";
-import { parseInteracao } from "./lib/utils";
+import {
+  parseInteracao,
+  STATUS_CONCLUIDO,
+  STATUS_REABERTOS,
+} from "./lib/utils";
 import { FileDrop } from "./components/FileDrop";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { ResumoGeral } from "./components/ResumoGeral";
@@ -51,11 +55,13 @@ export default function App() {
 
         const info = parseInteracao(interacaoTexto);
         if (!info) continue;
+        const statusAntigo = info.statusAntigo.trim().toLowerCase();
+        const statusAtual = info.statusAtual.trim().toLowerCase();
 
         // Rechamada
         if (
-          info.statusAntigo === "Concluído" &&
-          info.statusAtual !== "Concluído"
+          statusAntigo === STATUS_CONCLUIDO &&
+          STATUS_REABERTOS.includes(statusAtual)
         ) {
           ticketAtual.rechamadas[info.operadorAntigo] =
             (ticketAtual.rechamadas[info.operadorAntigo] || 0) + 1;

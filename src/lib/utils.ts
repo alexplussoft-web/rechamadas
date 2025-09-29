@@ -22,3 +22,10 @@ export function parseInteracao(interacao: string): StatusInfo | null {
     statusAtual,
   };
 }
+
+export const STATUS_CONCLUIDO = "concluído";
+export const STATUS_REABERTOS: string[] = [
+  "em atendimento",
+  "pendente empresa",
+  "pendente cliente",
+];
