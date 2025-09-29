@@ -1,15 +1,17 @@
 import { useState, type ChangeEvent } from "react";
 import { parseInteracao } from "./lib/utils";
-import { DataTable } from "./components/DataTable";
-import { RechamadaModal } from "./components/RechamadaModal";
 import { FileDrop } from "./components/FileDrop";
+import { DashboardHeader } from "./components/DashboardHeader";
+import { ResumoGeral } from "./components/ResumoGeral";
+import { OperadorGrid } from "./components/OperadorGrid";
+import { RechamadaModal } from "./components/RechamadaModal";
 import type { TicketResumo } from "./types/ticket";
 
 export default function App() {
   const [resumos, setResumos] = useState<TicketResumo[]>([]);
   const [selectedOp, setSelectedOp] = useState<string | null>(null);
-  const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
 
+  // 🔹 Função de leitura do CSV (igual à sua)
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -22,11 +24,11 @@ export default function App() {
       let ticketAtual: TicketResumo | null = null;
 
       for (let i = 0; i < lines.length; i++) {
-        const cols = lines[i].split(",");
+        const cols = lines[i].split(";");
 
-        // 🔹 Nova linha de ticket
+        // Nova linha de ticket
         if (cols[0] && !isNaN(Number(cols[0]))) {
-          const operador = cols[2]?.trim();
+          const operador = cols[1]?.trim();
           ticketAtual = {
             ticketNumber: cols[0],
             rechamadas: {},
@@ -42,14 +44,15 @@ export default function App() {
           continue;
         }
 
-        // 🔹 Linhas de interação
+        // Linhas de interação
         if (!cols[0] || cols[0] === "Data" || !ticketAtual) continue;
 
-        const interacaoTexto = cols[3] || "";
+        const interacaoTexto = cols[2] || "";
+
         const info = parseInteracao(interacaoTexto);
         if (!info) continue;
 
-        // 🔹 Rechamada
+        // Rechamada
         if (
           info.statusAntigo === "Concluído" &&
           info.statusAtual !== "Concluído"
@@ -65,6 +68,7 @@ export default function App() {
     reader.readAsText(file);
   };
 
+  // 🔹 Monta o resumo dos operadores
   const resumoOperadores: Record<
     string,
     { rechamadas: number; concluidos: number; ticketsRechamada: string[] }
@@ -91,43 +95,36 @@ export default function App() {
     });
   });
 
-  return (
-    <main className="min-h-screen bg-slate-50 p-8 flex flex-col items-center gap-8 w-full">
-      <header className="max-w-4xl w-full flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-800">
-            Relatório Inteligente — Rechamadas
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Arraste seu CSV ou clique para analisar. Resultado instantâneo no
-            navegador.
-          </p>
-        </div>
-      </header>
+  // Dados do operador selecionado
+  const operadorSelecionado = selectedOp
+    ? resumoOperadores[selectedOp]
+    : undefined;
 
-      <section className="w-full max-w-4xl">
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col items-center p-8">
+      <DashboardHeader />
+
+      <section className="w-full max-w-4xl mb-8">
         <FileDrop onFileChange={handleFile} />
       </section>
 
-      <section className="w-full max-w-4xl">
-        {resumos.length > 0 && (
-          <DataTable
+      {resumos.length > 0 && (
+        <>
+          <ResumoGeral data={resumoOperadores} />
+          <OperadorGrid
             data={resumoOperadores}
-            onOpenRechamadas={(op, tickets) => {
-              setSelectedOp(op);
-              setSelectedTickets(tickets);
-            }}
+            onSelect={(op) => setSelectedOp(op)}
           />
-        )}
-      </section>
+        </>
+      )}
 
-      <footer className="text-xs text-slate-400">
-        Feito com ❤️ — processamento local (nenhum dado é enviado)
+      <footer className="mt-10 text-xs text-slate-400">
+        Feito com ❤️ — processamento local, 100% seguro.
       </footer>
 
       <RechamadaModal
         operador={selectedOp}
-        tickets={selectedTickets}
+        data={operadorSelecionado}
         onClose={() => setSelectedOp(null)}
       />
     </main>
