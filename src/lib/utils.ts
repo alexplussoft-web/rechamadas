@@ -1,12 +1,9 @@
 import type { StatusInfo } from "../types/ticket";
 
 export function parseInteracao(interacao: string): StatusInfo | null {
-  console.log("Texto: ", interacao);
-
   const operadorMatch = interacao.match(
     /\[?(?:Operador|Usuário Logado):\s*(.*?)\]?\s*(?:->\s*(.*?))?(<br>|$)/
   );
-  console.log(operadorMatch);
 
   const statusMatch = interacao.match(/Status:\s*(.*?)\s*->\s*(.*?)(<br>|$)/);
 

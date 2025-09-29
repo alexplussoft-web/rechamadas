@@ -24,7 +24,7 @@ export default function App() {
       let ticketAtual: TicketResumo | null = null;
 
       for (let i = 0; i < lines.length; i++) {
-        const cols = lines[i].split(";");
+        const cols = lines[i].split(",");
 
         // Nova linha de ticket
         if (cols[0] && !isNaN(Number(cols[0]))) {
