@@ -54,6 +54,7 @@ export default function App() {
         const interacaoTexto = cols[2] || "";
 
         const info = parseInteracao(interacaoTexto);
+
         if (!info) continue;
         const statusAntigo = info.statusAntigo.trim().toLowerCase();
         const statusAtual = info.statusAtual.trim().toLowerCase();
@@ -63,8 +64,13 @@ export default function App() {
           statusAntigo === STATUS_CONCLUIDO &&
           STATUS_REABERTOS.includes(statusAtual)
         ) {
-          ticketAtual.rechamadas[info.operadorAntigo] =
-            (ticketAtual.rechamadas[info.operadorAntigo] || 0) + 1;
+          if (info.operadorAntigo || info.operadorAtual) {
+            ticketAtual.rechamadas[info.operadorAntigo] =
+              (ticketAtual.rechamadas[info.operadorAntigo] || 0) + 1;
+          } else {
+            ticketAtual.rechamadas[info.usuarioAtual] =
+              (ticketAtual.rechamadas[info.usuarioAtual] || 0) + 1;
+          }
         }
       }
 

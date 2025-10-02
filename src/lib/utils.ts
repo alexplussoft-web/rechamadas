@@ -2,22 +2,28 @@ import type { StatusInfo } from "../types/ticket";
 
 export function parseInteracao(interacao: string): StatusInfo | null {
   const operadorMatch = interacao.match(
-    /\[?(?:Operador|Usuário Logado):\s*(.*?)\]?\s*(?:->\s*(.*?))?(<br>|$)/
+    /\[?(?:Operador):\s*(.*?)\]?\s*(?:->\s*(.*?))?(<br>|$)/
+  );
+  const usuarioMatch = interacao.match(
+    /\[?(?:Usuário Logado):\s*(.*?)\]?\s*(?:->\s*(.*?))?(<br>|$)/
   );
 
   const statusMatch = interacao.match(/Status:\s*(.*?)\s*->\s*(.*?)(<br>|$)/);
 
-  if (!operadorMatch || !statusMatch) return null;
+  if (!statusMatch || (!operadorMatch && !usuarioMatch)) return null;
 
-  const operadorAntigo = operadorMatch[1]?.trim() || "";
-  const operadorAtual = (operadorMatch[2] || operadorMatch[1])?.trim() || "";
-
+  const operadorAntigo = operadorMatch ? operadorMatch[1]?.trim() : "";
+  const operadorAtual = operadorMatch
+    ? (operadorMatch[2] || operadorMatch[1])?.trim()
+    : "";
+  const usuarioAtual = usuarioMatch ? usuarioMatch[1]?.trim() : "";
   const statusAntigo = statusMatch[1]?.trim() || "";
   const statusAtual = statusMatch[2]?.trim() || "";
 
   return {
     operadorAntigo,
     operadorAtual,
+    usuarioAtual,
     statusAntigo,
     statusAtual,
   };

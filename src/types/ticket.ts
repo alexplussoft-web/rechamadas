@@ -7,6 +7,7 @@ export type TicketResumo = {
 export type StatusInfo = {
   operadorAntigo: string;
   operadorAtual: string;
+  usuarioAtual: string;
   statusAntigo: string;
   statusAtual: string;
 };
