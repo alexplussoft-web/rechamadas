@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Heart, Github, Linkedin, Mail, Info } from "lucide-react";
-import { Tooltip } from "./ToolTip";
+import { Tooltip } from "./Tooltip";
 
 export function Footer() {
   return (
