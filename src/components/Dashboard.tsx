@@ -74,7 +74,7 @@ export function Dashboard() {
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode as any)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                  className={`cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                     viewMode === mode
                       ? "bg-slate-800 text-white"
                       : "bg-slate-200 dark:bg-slate-700 dark:text-slate-200 text-slate-700"
