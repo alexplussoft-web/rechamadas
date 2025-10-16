@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function OperatorsTable({ operadores, onRowClick }: Props) {
-  const lista = Object.entries(operadores);
+  const lista = Object.entries(operadores).sort();
 
   return (
     <motion.div
