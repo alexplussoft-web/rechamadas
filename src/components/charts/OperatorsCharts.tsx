@@ -49,15 +49,31 @@ export function OperatorsCharts({ operadores }: Props) {
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
           Rechamadas por Operador
         </h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+        <ResponsiveContainer width="100%" height={300} className="text-sm">
+          <BarChart data={data} margin={{ bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-            <XAxis dataKey="nome" stroke="#94A3B8" />
+            <XAxis
+              dataKey="nome"
+              stroke="#94A3B8"
+              angle={-15}
+              textAnchor="end"
+              interval={0}
+            />
             <YAxis stroke="#94A3B8" />
             <Tooltip />
-            <Legend />
-            <Bar dataKey="concluidos" fill="#10B981" name="Concluídos" />
-            <Bar dataKey="rechamadas" fill="#EF4444" name="Rechamadas" />
+            <Legend verticalAlign="top" align="center" layout="horizontal" />
+            <Bar
+              dataKey="concluidos"
+              fill="#10B981"
+              name="Concluídos"
+              barSize={20}
+            />
+            <Bar
+              dataKey="rechamadas"
+              fill="#EF4444"
+              name="Rechamadas"
+              barSize={20}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

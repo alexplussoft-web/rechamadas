@@ -1,5 +1,5 @@
 import type { TicketInfo } from "@/types/csvTypes";
-import { Modal } from "./Modal";
+import { Modal } from "../layout/Modal";
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import { motion } from "framer-motion";

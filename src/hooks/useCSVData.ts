@@ -92,15 +92,27 @@ export function useCSVParser() {
               operadores[responsavel] = operadores[responsavel] || {
                 concluidos: 0,
                 rechamadas: 0,
-                ticketsConcluidos: new Set<string>(),
+                ticketsConcluidos: new Set<{
+                  id: string;
+                  dataConclusao: Date;
+                }>(),
               };
-              if (
-                !operadores[responsavel].ticketsConcluidos.has(ticketAtual.id)
-              ) {
-                operadores[responsavel].ticketsConcluidos.add(ticketAtual.id);
+
+              // 🔍 Verifica se o ticket já foi contado antes (por ID)
+              const jaContado = Array.from(
+                operadores[responsavel].ticketsConcluidos
+              ).some((t) => t.id === ticketAtual?.id);
+
+              if (!jaContado) {
+                operadores[responsavel].ticketsConcluidos.add({
+                  id: ticketAtual.id,
+                  dataConclusao: parseData(dataStr),
+                });
                 operadores[responsavel].concluidos++;
               }
+
               ticketAtual.operadorFinal = responsavel;
+              ticketAtual.dataConclusao = parseData(dataStr);
             }
 
             // Quando volta para atendimento ou pendente

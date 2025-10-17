@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { MetricCard } from "./MetricCard";
-import { FileDrop } from "./FileDrop";
-import { OperatorsCards } from "./OperatorsCards";
+import { FileDrop } from "../layout/FileDrop";
+import { OperatorsCards } from "../operators/OperatorsCards";
 import { TicketsModal } from "./TicketsModal";
 import { useCSVParser } from "@/hooks/useCSVData";
-import { Header } from "./Header";
+import { Header } from "../layout/Header";
 import { ChartColumn, List, Loader2, LucideLayoutGrid } from "lucide-react";
 import { motion } from "framer-motion";
-import { OperatorsTable } from "./OperatorsTable";
+import { OperatorsTable } from "../operators/OperatorsTable";
 import type { TicketInfo } from "@/types/csvTypes";
-import { OperatorsCharts } from "./OperatorsCharts";
+import { OperatorsCharts } from "../charts/OperatorsCharts";
+import { PerformanceCharts } from "../charts/PerformanceCharts";
 
 export function Dashboard() {
   const { analise, parseCSV, loading, erro } = useCSVParser();
@@ -104,7 +105,10 @@ export function Dashboard() {
               />
             )}
             {viewMode === "charts" && (
-              <OperatorsCharts operadores={analise.operadores} />
+              <div className="space-y-8">
+                <OperatorsCharts operadores={analise.operadores} />
+                <PerformanceCharts operadores={analise?.operadores || {}} />
+              </div>
             )}
           </motion.div>
 

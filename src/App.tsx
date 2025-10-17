@@ -1,5 +1,5 @@
-import { Dashboard } from "./components/Dashboard";
-import { Footer } from "./components/Footer";
+import { Dashboard } from "./components/dashboard/Dashboard";
+import { Footer } from "./components/layout/Footer";
 
 export function App() {
   return (
