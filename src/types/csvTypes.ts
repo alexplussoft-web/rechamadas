@@ -16,6 +16,7 @@ export interface OperatorStats {
 export interface OperadorResumo {
   concluidos: number;
   rechamadas: number;
+  ticketsConcluidos: Set<string>;
 }
 
 // Dados por ticket individual

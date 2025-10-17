@@ -1,3 +1,4 @@
+import { parseData } from "@/lib/utils";
 import type { AnaliseCSV, OperadorResumo, TicketInfo } from "@/types/csvTypes";
 import { useCallback, useState } from "react";
 
@@ -11,6 +12,7 @@ export function useCSVParser() {
     "Pendente Empresa",
     "Pendente Cliente",
   ];
+
   const parseCSV = useCallback(async (file: File) => {
     setLoading(true);
     setErro(null);
@@ -27,15 +29,19 @@ export function useCSVParser() {
 
       let ticketAtual: TicketInfo | null = null;
       let ultimoConcludente: string | null = null;
+      let ultimaConclusaoData: Date | null = null;
 
+      console.log("🧩 Iniciando parsing do CSV...");
       for (let i = 0; i < linhas.length; i++) {
         const linha = linhas[i];
         const colunas = linha.split(",");
 
-        // Identifica início de um novo ticket
+        // Detecta início de novo ticket
         if (colunas[0] && colunas[0].match(/^\d+$/)) {
-          // Exemplo: 233851,Karol Gomes,,08/10/25 15:49:42,...
-          if (ticketAtual) tickets.push(ticketAtual);
+          if (ticketAtual) {
+            console.log("✅ Ticket finalizado:", ticketAtual.id, ticketAtual);
+            tickets.push(ticketAtual);
+          }
 
           ticketAtual = {
             id: colunas[0],
@@ -45,16 +51,24 @@ export function useCSVParser() {
             rechamadasPorOperador: {},
           };
 
+          console.log(
+            "🎟️ Novo ticket detectado:",
+            ticketAtual.id,
+            "-",
+            ticketAtual.operadorInicial
+          );
+
           ultimoConcludente = null;
+          ultimaConclusaoData = null;
           continue;
         }
 
-        // Linhas de interação (tem estrutura tipo: Data,Responsável,Interação)
+        // Linhas de interação
         if (ticketAtual && /^\d{2}\/\d{2}\/\d{2}/.test(colunas[0])) {
+          const dataStr = colunas[0];
           const responsavel = colunas[1]?.trim() || "Desconhecido";
           const interacao = colunas[2]?.trim() || "";
 
-          // Detecta mudança de status
           const matchStatus = interacao.match(
             /Status:\s*(.*?)\s*->\s*(.*?)(<br>|$)/
           );
@@ -62,40 +76,85 @@ export function useCSVParser() {
             const de = matchStatus[1].trim();
             const para = matchStatus[2].trim();
 
-            // Conclusão
+            console.log(
+              `🔄 Transição detectada [${ticketAtual.id}] -> ${responsavel}: ${de} → ${para}`
+            );
+
+            // Quando muda para concluído
             if (para === "Concluído") {
               ultimoConcludente = responsavel;
+              ultimaConclusaoData = parseData(dataStr);
+
+              console.log(
+                `✅ Conclusão registrada por ${responsavel} em ${dataStr}`
+              );
+
               operadores[responsavel] = operadores[responsavel] || {
                 concluidos: 0,
                 rechamadas: 0,
+                ticketsConcluidos: new Set<string>(),
               };
-              operadores[responsavel].concluidos++;
+              if (
+                !operadores[responsavel].ticketsConcluidos.has(ticketAtual.id)
+              ) {
+                operadores[responsavel].ticketsConcluidos.add(ticketAtual.id);
+                operadores[responsavel].concluidos++;
+              }
               ticketAtual.operadorFinal = responsavel;
             }
 
-            // Rechamada (volta para atendimento)
+            // Quando volta para atendimento ou pendente
             if (
               de === "Concluído" &&
               statusRechamada.includes(para) &&
-              ultimoConcludente
+              ultimoConcludente &&
+              ultimaConclusaoData
             ) {
-              operadores[ultimoConcludente] = operadores[ultimoConcludente] || {
-                concluidos: 0,
-                rechamadas: 0,
-              };
-              operadores[ultimoConcludente].rechamadas++;
-              ticketAtual.rechamadasPorOperador[ultimoConcludente] =
-                (ticketAtual.rechamadasPorOperador[ultimoConcludente] || 0) + 1;
-              ticketAtual.totalRechamadas++;
+              const dataAtual = parseData(dataStr);
+              const diffHoras =
+                (dataAtual.getTime() - ultimaConclusaoData.getTime()) /
+                (1000 * 60 * 60);
+
+              console.log(
+                `⏱️ Ticket ${
+                  ticketAtual.id
+                } reaberto por ${responsavel} após ${diffHoras.toFixed(
+                  2
+                )}h (última conclusão por ${ultimoConcludente})`
+              );
+
+              if (diffHoras <= 24) {
+                console.log(
+                  `⚠️ Rechamada CONTABILIZADA para ${ultimoConcludente}`
+                );
+
+                operadores[ultimoConcludente] = operadores[
+                  ultimoConcludente
+                ] || {
+                  concluidos: 0,
+                  rechamadas: 0,
+                };
+                operadores[ultimoConcludente].rechamadas++;
+
+                ticketAtual.rechamadasPorOperador[ultimoConcludente] =
+                  (ticketAtual.rechamadasPorOperador[ultimoConcludente] || 0) +
+                  1;
+                ticketAtual.totalRechamadas++;
+              } else {
+                console.log(
+                  `ℹ️ Rechamada ignorada (após ${diffHoras.toFixed(2)}h > 24h)`
+                );
+              }
             }
           }
         }
       }
 
-      // Adiciona o último ticket se houver
-      if (ticketAtual) tickets.push(ticketAtual);
+      if (ticketAtual) {
+        console.log("✅ Último ticket adicionado:", ticketAtual.id);
+        tickets.push(ticketAtual);
+      }
 
-      // Calcula totais
       const totalTickets = tickets.length;
       const totalRechamadas = tickets.reduce(
         (acc, t) => acc + t.totalRechamadas,
@@ -109,9 +168,11 @@ export function useCSVParser() {
         tickets,
       };
 
+      console.log("📊 Resultado final:", resultado);
+
       setAnalise(resultado);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Erro ao processar CSV:", err);
       setErro("Erro ao processar o arquivo CSV.");
     } finally {
       setLoading(false);
