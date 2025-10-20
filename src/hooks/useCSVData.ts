@@ -1,4 +1,7 @@
-import { parseData } from "@/lib/utils";
+import { finalizeTicket } from "@/lib/csvParser/finalizeTicket";
+import { parseCSVFile } from "@/lib/csvParser/parseCSVFile";
+import { processInteractionRow } from "@/lib/csvParser/processInteractionRow";
+import { processTicketRow } from "@/lib/csvParser/processTicketRow";
 import type { AnaliseCSV, OperadorResumo, TicketInfo } from "@/types/csvTypes";
 import { useCallback, useState } from "react";
 
@@ -18,193 +21,56 @@ export function useCSVParser() {
     setErro(null);
 
     try {
-      const text = await file.text();
-      const linhas = text
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter(Boolean);
+      const linhas = await parseCSVFile(file);
 
       const tickets: TicketInfo[] = [];
       const operadores: Record<string, OperadorResumo> = {};
 
       let ticketAtual: TicketInfo | null = null;
-      let ultimoConcludente: string | null = null;
-      let ultimaConclusaoData: Date | null = null;
+      const ultimoConcludenteRef = { value: null as string | null };
+      const ultimaConclusaoDataRef = { value: null as Date | null };
 
-      console.log("🧩 Iniciando parsing do CSV...");
+      for (const colunas of linhas) {
+        if (!colunas || colunas.length === 0) continue;
 
-      for (let i = 0; i < linhas.length; i++) {
-        const linha = linhas[i];
-        const colunas = linha.split(",");
-
-        // Detecta início de novo ticket
-        if (colunas[0] && colunas[0].match(/^\d+$/)) {
+        // Novo ticket
+        if (colunas[0] && /^\d+$/.test(colunas[0])) {
           if (ticketAtual) {
-            // 🔹 Contabiliza ticket concluído se tiver dataConclusao
-            if (ticketAtual.dataConclusao) {
-              const operador =
-                ticketAtual.operadorFinal || ticketAtual.operadorInicial;
-
-              operadores[operador] = operadores[operador] || {
-                concluidos: 0,
-                rechamadas: 0,
-                ticketsConcluidos: new Set<{
-                  id: string;
-                  dataConclusao: Date;
-                }>(),
-              };
-
-              const jaContado = Array.from(
-                operadores[operador].ticketsConcluidos
-              ).some((t) => t.id === ticketAtual?.id);
-
-              if (!jaContado) {
-                operadores[operador].ticketsConcluidos.add({
-                  id: ticketAtual.id,
-                  dataConclusao: ticketAtual.dataConclusao,
-                });
-                operadores[operador].concluidos++;
-              }
-            }
-
-            console.log("✅ Ticket finalizado:", ticketAtual.id, ticketAtual);
+            finalizeTicket(ticketAtual, operadores);
             tickets.push(ticketAtual);
           }
-
-          const possivelFechamento = colunas[5] as string;
-          ticketAtual = {
-            id: colunas[0],
-            operadorInicial: colunas[1]?.trim() || "Desconhecido",
-            operadorFinal: colunas[1]?.trim() || "Desconhecido",
-            totalRechamadas: 0,
-            rechamadasPorOperador: {},
-            dataConclusao: possivelFechamento
-              ? parseData(possivelFechamento)
-              : null,
-          };
-
-          ultimoConcludente = null;
-          ultimaConclusaoData = null;
+          ticketAtual = processTicketRow(colunas);
+          ultimoConcludenteRef.value = null;
+          ultimaConclusaoDataRef.value = null;
           continue;
         }
 
-        // Linhas de interação
+        // Interação
         if (ticketAtual && /^\d{2}\/\d{2}\/\d{2}/.test(colunas[0])) {
-          const dataStr = colunas[0];
-          const responsavel = colunas[1]?.trim() || "Desconhecido";
-          const interacao = colunas[2]?.trim() || "";
-
-          const matchStatus = interacao.match(
-            /Status:\s*(.*?)\s*->\s*(.*?)(<br>|$)/
+          processInteractionRow(
+            colunas,
+            ticketAtual,
+            operadores,
+            ultimoConcludenteRef,
+            ultimaConclusaoDataRef,
+            statusRechamada
           );
-          if (matchStatus) {
-            const de = matchStatus[1].trim();
-            const para = matchStatus[2].trim();
-
-            console.log(
-              `🔄 Transição detectada [${ticketAtual.id}] -> ${responsavel}: ${de} → ${para}`
-            );
-
-            // Quando muda para concluído
-            if (para === "Concluído") {
-              ultimoConcludente = responsavel;
-              ultimaConclusaoData = parseData(dataStr);
-
-              operadores[responsavel] = operadores[responsavel] || {
-                concluidos: 0,
-                rechamadas: 0,
-                ticketsConcluidos: new Set<{
-                  id: string;
-                  dataConclusao: Date;
-                }>(),
-              };
-
-              const jaContado = Array.from(
-                operadores[responsavel].ticketsConcluidos
-              ).some((t) => t.id === ticketAtual?.id);
-
-              if (!jaContado) {
-                operadores[responsavel].ticketsConcluidos.add({
-                  id: ticketAtual.id,
-                  dataConclusao: parseData(dataStr),
-                });
-                operadores[responsavel].concluidos++;
-              }
-
-              ticketAtual.operadorFinal = responsavel;
-              ticketAtual.dataConclusao = parseData(dataStr);
-            }
-
-            // Quando volta para atendimento ou pendente
-            if (
-              de === "Concluído" &&
-              statusRechamada.includes(para) &&
-              ultimoConcludente &&
-              ultimaConclusaoData
-            ) {
-              const dataAtual = parseData(dataStr);
-              const diffHoras =
-                (dataAtual.getTime() - ultimaConclusaoData.getTime()) /
-                (1000 * 60 * 60);
-
-              if (diffHoras <= 24) {
-                operadores[ultimoConcludente] = operadores[
-                  ultimoConcludente
-                ] || { concluidos: 0, rechamadas: 0 };
-                operadores[ultimoConcludente].rechamadas++;
-
-                ticketAtual.rechamadasPorOperador[ultimoConcludente] =
-                  (ticketAtual.rechamadasPorOperador[ultimoConcludente] || 0) +
-                  1;
-                ticketAtual.totalRechamadas++;
-              }
-            }
-          }
         }
       }
 
       // Último ticket
       if (ticketAtual) {
-        if (ticketAtual.dataConclusao) {
-          const operador =
-            ticketAtual.operadorFinal || ticketAtual.operadorInicial;
-
-          operadores[operador] = operadores[operador] || {
-            concluidos: 0,
-            rechamadas: 0,
-            ticketsConcluidos: new Set<{ id: string; dataConclusao: Date }>(),
-          };
-
-          const jaContado = Array.from(
-            operadores[operador].ticketsConcluidos
-          ).some((t) => t.id === ticketAtual?.id);
-
-          if (!jaContado) {
-            operadores[operador].ticketsConcluidos.add({
-              id: ticketAtual.id,
-              dataConclusao: ticketAtual.dataConclusao,
-            });
-            operadores[operador].concluidos++;
-          }
-        }
-
+        finalizeTicket(ticketAtual, operadores);
         tickets.push(ticketAtual);
       }
 
-      const totalTickets = tickets.length;
-      const totalRechamadas = tickets.reduce(
-        (acc, t) => acc + t.totalRechamadas,
-        0
-      );
-
       const resultado: AnaliseCSV = {
-        totalTickets,
-        totalRechamadas,
+        totalTickets: tickets.length,
+        totalRechamadas: tickets.reduce((acc, t) => acc + t.totalRechamadas, 0),
         operadores,
         tickets,
       };
 
-      console.log("📊 Resultado final:", resultado);
       setAnalise(resultado);
     } catch (err) {
       console.error("❌ Erro ao processar CSV:", err);

@@ -31,6 +31,38 @@ export function Dashboard() {
     setOpenModal(true);
   };
 
+  {
+    loading && (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            duration: 0.5,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="flex flex-col items-center gap-4 p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-xl"
+        >
+          <Loader2 className="animate-spin text-4xl text-blue-500" />
+          <motion.p
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{
+              delay: 0.2,
+              duration: 0.5,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+            className="text-lg font-medium text-slate-800 dark:text-slate-100"
+          >
+            Processando CSV...
+          </motion.p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <Header />
