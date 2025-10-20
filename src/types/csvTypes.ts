@@ -23,7 +23,7 @@ export interface TicketInfo {
   operadorFinal: string;
   totalRechamadas: number;
   rechamadasPorOperador: Record<string, number>;
-  dataConclusao?: Date;
+  dataConclusao?: Date | null;
 }
 
 export interface AnaliseCSV {

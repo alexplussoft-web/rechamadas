@@ -32,6 +32,7 @@ export function useCSVParser() {
       let ultimaConclusaoData: Date | null = null;
 
       console.log("🧩 Iniciando parsing do CSV...");
+
       for (let i = 0; i < linhas.length; i++) {
         const linha = linhas[i];
         const colunas = linha.split(",");
@@ -39,24 +40,48 @@ export function useCSVParser() {
         // Detecta início de novo ticket
         if (colunas[0] && colunas[0].match(/^\d+$/)) {
           if (ticketAtual) {
+            // 🔹 Contabiliza ticket concluído se tiver dataConclusao
+            if (ticketAtual.dataConclusao) {
+              const operador =
+                ticketAtual.operadorFinal || ticketAtual.operadorInicial;
+
+              operadores[operador] = operadores[operador] || {
+                concluidos: 0,
+                rechamadas: 0,
+                ticketsConcluidos: new Set<{
+                  id: string;
+                  dataConclusao: Date;
+                }>(),
+              };
+
+              const jaContado = Array.from(
+                operadores[operador].ticketsConcluidos
+              ).some((t) => t.id === ticketAtual?.id);
+
+              if (!jaContado) {
+                operadores[operador].ticketsConcluidos.add({
+                  id: ticketAtual.id,
+                  dataConclusao: ticketAtual.dataConclusao,
+                });
+                operadores[operador].concluidos++;
+              }
+            }
+
             console.log("✅ Ticket finalizado:", ticketAtual.id, ticketAtual);
             tickets.push(ticketAtual);
           }
 
+          const possivelFechamento = colunas[5] as string;
           ticketAtual = {
             id: colunas[0],
             operadorInicial: colunas[1]?.trim() || "Desconhecido",
             operadorFinal: colunas[1]?.trim() || "Desconhecido",
             totalRechamadas: 0,
             rechamadasPorOperador: {},
+            dataConclusao: possivelFechamento
+              ? parseData(possivelFechamento)
+              : null,
           };
-
-          console.log(
-            "🎟️ Novo ticket detectado:",
-            ticketAtual.id,
-            "-",
-            ticketAtual.operadorInicial
-          );
 
           ultimoConcludente = null;
           ultimaConclusaoData = null;
@@ -85,10 +110,6 @@ export function useCSVParser() {
               ultimoConcludente = responsavel;
               ultimaConclusaoData = parseData(dataStr);
 
-              console.log(
-                `✅ Conclusão registrada por ${responsavel} em ${dataStr}`
-              );
-
               operadores[responsavel] = operadores[responsavel] || {
                 concluidos: 0,
                 rechamadas: 0,
@@ -98,7 +119,6 @@ export function useCSVParser() {
                 }>(),
               };
 
-              // 🔍 Verifica se o ticket já foi contado antes (por ID)
               const jaContado = Array.from(
                 operadores[responsavel].ticketsConcluidos
               ).some((t) => t.id === ticketAtual?.id);
@@ -127,43 +147,47 @@ export function useCSVParser() {
                 (dataAtual.getTime() - ultimaConclusaoData.getTime()) /
                 (1000 * 60 * 60);
 
-              console.log(
-                `⏱️ Ticket ${
-                  ticketAtual.id
-                } reaberto por ${responsavel} após ${diffHoras.toFixed(
-                  2
-                )}h (última conclusão por ${ultimoConcludente})`
-              );
-
               if (diffHoras <= 24) {
-                console.log(
-                  `⚠️ Rechamada CONTABILIZADA para ${ultimoConcludente}`
-                );
-
                 operadores[ultimoConcludente] = operadores[
                   ultimoConcludente
-                ] || {
-                  concluidos: 0,
-                  rechamadas: 0,
-                };
+                ] || { concluidos: 0, rechamadas: 0 };
                 operadores[ultimoConcludente].rechamadas++;
 
                 ticketAtual.rechamadasPorOperador[ultimoConcludente] =
                   (ticketAtual.rechamadasPorOperador[ultimoConcludente] || 0) +
                   1;
                 ticketAtual.totalRechamadas++;
-              } else {
-                console.log(
-                  `ℹ️ Rechamada ignorada (após ${diffHoras.toFixed(2)}h > 24h)`
-                );
               }
             }
           }
         }
       }
 
+      // Último ticket
       if (ticketAtual) {
-        console.log("✅ Último ticket adicionado:", ticketAtual.id);
+        if (ticketAtual.dataConclusao) {
+          const operador =
+            ticketAtual.operadorFinal || ticketAtual.operadorInicial;
+
+          operadores[operador] = operadores[operador] || {
+            concluidos: 0,
+            rechamadas: 0,
+            ticketsConcluidos: new Set<{ id: string; dataConclusao: Date }>(),
+          };
+
+          const jaContado = Array.from(
+            operadores[operador].ticketsConcluidos
+          ).some((t) => t.id === ticketAtual?.id);
+
+          if (!jaContado) {
+            operadores[operador].ticketsConcluidos.add({
+              id: ticketAtual.id,
+              dataConclusao: ticketAtual.dataConclusao,
+            });
+            operadores[operador].concluidos++;
+          }
+        }
+
         tickets.push(ticketAtual);
       }
 
@@ -181,7 +205,6 @@ export function useCSVParser() {
       };
 
       console.log("📊 Resultado final:", resultado);
-
       setAnalise(resultado);
     } catch (err) {
       console.error("❌ Erro ao processar CSV:", err);
