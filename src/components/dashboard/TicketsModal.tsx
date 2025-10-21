@@ -23,7 +23,7 @@ export function TicketsModal({
   operador,
   categorias,
 }: Props) {
-  const [copiado, setCopiado] = useState<string | null>(null);
+  const [_copiado, setCopiado] = useState<string | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState("");
   const [filtroClassificacao, setFiltroClassificacao] = useState("");
   const [filtroAssunto, setFiltroAssunto] = useState("");
