@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import {
-  BarChart,
-  Bar,
+  // BarChart,
+  // Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -24,12 +24,12 @@ interface Props {
  */
 export function PerformanceCharts({ operadores }: Props) {
   // --- Eficiência ---
-  const eficienciaData = Object.entries(operadores).map(([nome, o]) => ({
-    nome,
-    eficiencia: o.concluidos
-      ? Number(((1 - o.rechamadas / o.concluidos) * 100).toFixed(1))
-      : 0,
-  }));
+  // const eficienciaData = Object.entries(operadores).map(([nome, o]) => ({
+  //   nome,
+  //   eficiencia: o.concluidos
+  //     ? Number(((1 - o.rechamadas / o.concluidos) * 100).toFixed(1))
+  //     : 0,
+  // }));
 
   // --- Tendência (conclusões por dia) ---
   const tendenciaDataMap: Record<string, number> = {};
@@ -57,7 +57,7 @@ export function PerformanceCharts({ operadores }: Props) {
       className="flex flex-col gap-8"
     >
       {/* --- Gráfico de Eficiência --- */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -94,7 +94,7 @@ export function PerformanceCharts({ operadores }: Props) {
             />
           </BarChart>
         </ResponsiveContainer>
-      </motion.div>
+      </motion.div> */}
 
       {/* --- Gráfico de Tendência --- */}
       <motion.div

@@ -1,4 +1,4 @@
-import type { TicketInfo } from "@/types/csvTypes";
+import type { OperadorResumo, TicketInfo } from "@/types/csvTypes";
 import { Modal } from "../layout/Modal";
 import { useState } from "react";
 import { Copy } from "lucide-react";
@@ -9,9 +9,16 @@ interface Props {
   onClose: () => void;
   tickets: TicketInfo[];
   operador: string | null;
+  operadorResumo?: OperadorResumo;
 }
 
-export function TicketsModal({ open, onClose, tickets, operador }: Props) {
+export function TicketsModal({
+  open,
+  onClose,
+  tickets,
+  operador,
+  operadorResumo,
+}: Props) {
   const [copiado, setCopiado] = useState<string | null>(null);
 
   const copiarTicket = async (ticket: string) => {
@@ -20,15 +27,15 @@ export function TicketsModal({ open, onClose, tickets, operador }: Props) {
     setTimeout(() => setCopiado(null), 1500);
   };
 
-  if (!tickets.length) {
-    return (
-      <Modal open={open} onClose={onClose} title="Tickets em Rechamada">
-        <p className="text-slate-500 dark:text-slate-400 text-center py-6">
-          Nenhum ticket com rechamada para este operador.
-        </p>
-      </Modal>
-    );
-  }
+  // if (!tickets.length) {
+  //   return (
+  //     <Modal open={open} onClose={onClose} title="Tickets em Rechamada">
+  //       <p className="text-slate-500 dark:text-slate-400 text-center py-6">
+  //         Nenhum ticket com rechamada para este operador.
+  //       </p>
+  //     </Modal>
+  //   );
+  // }
 
   return (
     <Modal open={open} onClose={onClose} title={`Rechamadas - ${operador}`}>
@@ -93,6 +100,29 @@ export function TicketsModal({ open, onClose, tickets, operador }: Props) {
             </motion.div>
           ))}
         </motion.div>
+        {/* ✅ NOVA SEÇÃO — Tickets concluídos pelo operador */}
+        {operadorResumo && operadorResumo.ticketsConcluidos.size > 0 && (
+          <div>
+            <h3 className="text-md font-semibold mb-2 text-slate-700 dark:text-slate-200">
+              ✅ Tickets Concluídos
+            </h3>
+            <div className="space-y-2">
+              {Array.from(operadorResumo.ticketsConcluidos).map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-3 rounded-lg"
+                >
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
+                    #{t.id}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {new Date(t.dataConclusao).toLocaleDateString("pt-BR")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );

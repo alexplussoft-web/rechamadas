@@ -32,3 +32,10 @@ export interface AnaliseCSV {
   operadores: Record<string, OperadorResumo>;
   tickets: TicketInfo[];
 }
+
+export interface TicketCategoria {
+  id: string; // Número do ticket
+  assunto: string; // Coluna "Assunto"
+  categoria: string; // Ex: "Atendimento técnico", "Estrutura do cliente"
+  classificacao: string; // Ex: "Certificado Digital", "Instalação do Sistema"
+}

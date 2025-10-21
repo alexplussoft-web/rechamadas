@@ -150,6 +150,11 @@ export function Dashboard() {
             onClose={() => setOpenModal(false)}
             tickets={selectedTickets}
             operador={selectedOperator}
+            operadorResumo={
+              selectedOperator
+                ? analise.operadores[selectedOperator]
+                : undefined
+            }
           />
         </>
       )}
