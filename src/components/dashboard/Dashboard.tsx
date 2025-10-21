@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MetricCard } from "./MetricCard";
 import { FileDrop } from "../layout/FileDrop";
 import { OperatorsCards } from "../operators/OperatorsCards";
@@ -8,27 +8,50 @@ import { Header } from "../layout/Header";
 import { ChartColumn, List, Loader2, LucideLayoutGrid } from "lucide-react";
 import { motion } from "framer-motion";
 import { OperatorsTable } from "../operators/OperatorsTable";
-import type { TicketInfo } from "@/types/csvTypes";
 import { OperatorsCharts } from "../charts/OperatorsCharts";
 import { PerformanceCharts } from "../charts/PerformanceCharts";
+import { parseCategoriasCSV } from "@/lib/csv/parseCategoriesCSV";
+import type { TicketCategoria, TicketInfo } from "@/types/csvTypes";
 
 export function Dashboard() {
   const { analise, parseCSV, loading, erro } = useCSVParser();
+  const [categorias, setCategorias] = useState<TicketCategoria[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
   const [selectedTickets, setSelectedTickets] = useState<TicketInfo[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "table" | "charts">(
     "cards"
   );
+  const [todosTickets, setTodosTickets] = useState<TicketInfo[]>([]);
+
+  useEffect(() => {
+    if (analise) {
+      setTodosTickets(analise.tickets);
+    }
+  }, [analise]);
 
   const handleRowClick = (operador: string) => {
     if (!analise) return;
-    const ticketsDoOperador = analise.tickets.filter(
-      (t) => t.rechamadasPorOperador?.[operador]
+    const ticketsDoOperador = todosTickets.filter(
+      (t) =>
+        t.operadorInicial === operador ||
+        t.operadorFinal === operador ||
+        t.rechamadasPorOperador?.[operador] > 0
     );
     setSelectedOperator(operador);
     setSelectedTickets(ticketsDoOperador);
     setOpenModal(true);
+  };
+
+  /** Lida com o upload do CSV de categorias */
+  const handleCategoriasUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target?.result as string;
+      const parsed = await parseCategoriasCSV(text);
+      setCategorias(parsed);
+    };
+    reader.readAsText(file);
   };
 
   {
@@ -69,6 +92,14 @@ export function Dashboard() {
 
       {/* Upload CSV */}
       <FileDrop onFile={(file) => parseCSV(file)} />
+
+      {/* Upload CSV de categorias */}
+      <div className="mt-6">
+        <FileDrop onFile={handleCategoriasUpload} />
+        <p className="text-sm text-slate-500 mt-1 text-center">
+          Importar CSV de Categorias para vincular aos tickets
+        </p>
+      </div>
 
       {loading && (
         <div className="flex items-center justify-center w-full">
@@ -150,11 +181,7 @@ export function Dashboard() {
             onClose={() => setOpenModal(false)}
             tickets={selectedTickets}
             operador={selectedOperator}
-            operadorResumo={
-              selectedOperator
-                ? analise.operadores[selectedOperator]
-                : undefined
-            }
+            categorias={categorias}
           />
         </>
       )}

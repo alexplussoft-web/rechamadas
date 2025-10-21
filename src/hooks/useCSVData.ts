@@ -1,7 +1,7 @@
-import { finalizeTicket } from "@/lib/csvParser/finalizeTicket";
-import { parseCSVFile } from "@/lib/csvParser/parseCSVFile";
-import { processInteractionRow } from "@/lib/csvParser/processInteractionRow";
-import { processTicketRow } from "@/lib/csvParser/processTicketRow";
+import { finalizeTicket } from "@/lib/csv/finalizeTicket";
+import { parseCSVFile } from "@/lib/csv/parseCSVFile";
+import { processInteractionRow } from "@/lib/csv/processInteractionRow";
+import { processTicketRow } from "@/lib/csv/processTicketRow";
 import type { AnaliseCSV, OperadorResumo, TicketInfo } from "@/types/csvTypes";
 import { useCallback, useState } from "react";
 

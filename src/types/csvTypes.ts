@@ -34,8 +34,9 @@ export interface AnaliseCSV {
 }
 
 export interface TicketCategoria {
-  id: string; // Número do ticket
-  assunto: string; // Coluna "Assunto"
-  categoria: string; // Ex: "Atendimento técnico", "Estrutura do cliente"
-  classificacao: string; // Ex: "Certificado Digital", "Instalação do Sistema"
+  ticketId: string; // id do ticket
+  setor: string;
+  categoria: string;
+  classificacao: string;
+  assunto: string;
 }

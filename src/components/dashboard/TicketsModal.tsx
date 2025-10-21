@@ -1,15 +1,16 @@
-import type { OperadorResumo, TicketInfo } from "@/types/csvTypes";
 import { Modal } from "../layout/Modal";
 import { useState } from "react";
-import { Copy } from "lucide-react";
+import { Calendar, Copy, Info } from "lucide-react";
 import { motion } from "framer-motion";
+import type { TicketCategoria, TicketInfo } from "@/types/csvTypes";
+import { Badge } from "../ui/badge";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   tickets: TicketInfo[];
   operador: string | null;
-  operadorResumo?: OperadorResumo;
+  categorias?: TicketCategoria[];
 }
 
 export function TicketsModal({
@@ -17,9 +18,13 @@ export function TicketsModal({
   onClose,
   tickets,
   operador,
-  operadorResumo,
+  categorias,
 }: Props) {
   const [copiado, setCopiado] = useState<string | null>(null);
+
+  const ticketsRechamadas = tickets.filter(
+    (t) => t.rechamadasPorOperador?.[operador!]
+  );
 
   const copiarTicket = async (ticket: string) => {
     await navigator.clipboard.writeText(ticket);
@@ -27,15 +32,23 @@ export function TicketsModal({
     setTimeout(() => setCopiado(null), 1500);
   };
 
-  // if (!tickets.length) {
-  //   return (
-  //     <Modal open={open} onClose={onClose} title="Tickets em Rechamada">
-  //       <p className="text-slate-500 dark:text-slate-400 text-center py-6">
-  //         Nenhum ticket com rechamada para este operador.
-  //       </p>
-  //     </Modal>
-  //   );
-  // }
+  const categoriasPorTicket = categorias?.reduce<
+    Record<string, TicketCategoria[]>
+  >((acc, c) => {
+    if (!acc[c.ticketId]) acc[c.ticketId] = [];
+    acc[c.ticketId].push(c);
+    return acc;
+  }, {});
+
+  if (!tickets.length) {
+    return (
+      <Modal open={open} onClose={onClose} title="Tickets em Rechamada">
+        <p className="text-slate-500 dark:text-slate-400 text-center py-6">
+          Nenhum ticket com rechamada para este operador.
+        </p>
+      </Modal>
+    );
+  }
 
   return (
     <Modal open={open} onClose={onClose} title={`Rechamadas - ${operador}`}>
@@ -50,7 +63,7 @@ export function TicketsModal({
           <p className="text-sm text-slate-700 dark:text-slate-300">
             <span className="font-semibold">{operador}</span> participou de{" "}
             <span className="font-semibold text-blue-600 dark:text-blue-400">
-              {tickets.length}
+              {ticketsRechamadas.length}
             </span>{" "}
             ticket(s) com rechamada.
           </p>
@@ -58,7 +71,7 @@ export function TicketsModal({
 
         {/* Lista de Tickets */}
         <motion.div layout className="grid sm:grid-cols-2 gap-3">
-          {tickets.map((t, i) => (
+          {ticketsRechamadas.map((t, i) => (
             <motion.div
               key={t.id}
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -83,6 +96,7 @@ export function TicketsModal({
                     {t.totalRechamadas}
                   </span>
                 </div>
+
                 <button
                   onClick={() => copiarTicket(t.id)}
                   className="flex items-center gap-1 text-slate-600 hover:text-slate-800 text-xs"
@@ -100,28 +114,65 @@ export function TicketsModal({
             </motion.div>
           ))}
         </motion.div>
-        {/* ✅ NOVA SEÇÃO — Tickets concluídos pelo operador */}
-        {operadorResumo && operadorResumo.ticketsConcluidos.size > 0 && (
-          <div>
-            <h3 className="text-md font-semibold mb-2 text-slate-700 dark:text-slate-200">
-              ✅ Tickets Concluídos
+        {categorias && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-800 p-4 rounded-xl"
+          >
+            <h3 className="flex items-center justify-center gap-2 text-md font-semibold text-zinc-800 dark:text-green-300 mb-2">
+              <Info className="text-blue-500 animate-pulse" /> Detalhes
             </h3>
-            <div className="space-y-2">
-              {Array.from(operadorResumo.ticketsConcluidos).map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-center justify-between bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-3 rounded-lg"
-                >
-                  <span className="text-sm text-slate-700 dark:text-slate-300">
-                    #{t.id}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {new Date(t.dataConclusao).toLocaleDateString("pt-BR")}
-                  </span>
+
+            {tickets.map((t) => (
+              <div key={t.id} className="mb-3">
+                <div className="text-xs text-muted-foreground mb-1">
+                  Ticket #{t.id}
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="space-y-1">
+                  {categoriasPorTicket?.[t.id]?.map((c) => (
+                    <div className="flex items-center justify-between gap-3">
+                      <div
+                        key={c.categoria + c.classificacao}
+                        className="border p-2 rounded-4xl flex flex-col w-full sm:flex-row sm:items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                      >
+                        <Badge
+                          variant="secondary"
+                          className="bg-red-400 text-white dark:bg-red-500"
+                        >
+                          {c.categoria || "Sem Categoria"}
+                        </Badge>
+                        <Badge
+                          variant="secondary"
+                          className="bg-blue-400 text-white dark:bg-blue-500"
+                        >
+                          {c.classificacao || "Sem Classificação"}
+                        </Badge>
+                        <div>
+                          <span className="text-muted-foreground">
+                            {c.assunto}
+                          </span>
+                        </div>
+                      </div>
+                      {t.dataConclusao && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-5 w-5" />
+                          <span className="text-muted-foreground text-sm">
+                            {t.dataConclusao.toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )) || (
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                      Nenhuma categoria vinculada
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </motion.div>
         )}
       </div>
     </Modal>
