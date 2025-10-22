@@ -2,8 +2,8 @@ import { finalizeTicket } from "@/lib/csv/finalizeTicket";
 import { parseCSVFile } from "@/lib/csv/parseCSVFile";
 import { processInteractionRow } from "@/lib/csv/processInteractionRow";
 import { processTicketRow } from "@/lib/csv/processTicketRow";
-import type { AnaliseCSV, OperadorResumo, TicketInfo } from "@/types/csvTypes";
 import { useCallback, useState } from "react";
+import type { AnaliseCSV, OperadorResumo, TicketInfo } from "@/types/csvTypes";
 
 export function useCSVParser() {
   const [analise, setAnalise] = useState<AnaliseCSV | null>(null);
