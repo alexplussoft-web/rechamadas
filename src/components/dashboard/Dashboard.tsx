@@ -5,7 +5,14 @@ import { OperatorsCards } from "../operators/OperatorsCards";
 import { TicketsModal } from "./TicketsModal";
 import { useCSVParser } from "@/hooks/useCSVData";
 import { Header } from "../layout/Header";
-import { ChartColumn, List, Loader2, LucideLayoutGrid } from "lucide-react";
+import {
+  ArrowDownFromLineIcon,
+  ChartColumn,
+  Download,
+  List,
+  Loader2,
+  LucideLayoutGrid,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { OperatorsTable } from "../operators/OperatorsTable";
 import { OperatorsCharts } from "../charts/OperatorsCharts";
@@ -91,14 +98,17 @@ export function Dashboard() {
       <Header />
 
       {/* Upload CSV */}
-      <FileDrop onFile={(file) => parseCSV(file)} />
-
-      {/* Upload CSV de categorias */}
-      <div className="mt-6">
-        <FileDrop onFile={handleCategoriasUpload} />
-        <p className="text-sm text-slate-500 mt-1 text-center">
-          Importar CSV de Categorias para vincular aos tickets
-        </p>
+      <div className="flex justify-between items-center">
+        <FileDrop
+          icon={<Download size={40} />}
+          onFile={(file) => parseCSV(file)}
+          title="Relatório de Interação"
+        />
+        <FileDrop
+          icon={<ArrowDownFromLineIcon size={40} />}
+          onFile={handleCategoriasUpload}
+          title="Listagem de Tickets"
+        />
       </div>
 
       {loading && (

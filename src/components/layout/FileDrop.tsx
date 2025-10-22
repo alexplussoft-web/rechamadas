@@ -1,17 +1,30 @@
-import { useState, useRef, useCallback, type ChangeEvent } from "react";
+import { BadgeCheckIcon } from "lucide-react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 
 type Props = {
   onFile?: (file: File) => void;
+  title: string;
+  icon: ReactNode;
 };
 
-export function FileDrop({ onFile }: Props) {
+export function FileDrop({ onFile, title, icon }: Props) {
   const [hover, setHover] = useState(false);
+  const [fileLoaded, setFileLoaded] = useState(false); // ✅ Estado para arquivo carregado
+  const [fileName, setFileName] = useState<string | null>(null); // ✅ Nome do arquivo
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const onFiles = useCallback(
     (file: File | null) => {
       if (!file) return;
       onFile?.(file);
+      setFileLoaded(true);
+      setFileName(file.name); // ✅ Salva o nome
     },
     [onFile]
   );
@@ -40,48 +53,29 @@ export function FileDrop({ onFile }: Props) {
           hover
             ? "border-slate-300 bg-slate-50"
             : "border-dashed border-gray-300 bg-white"
-        } flex items-center gap-4`}
+        } flex items-center gap-4
+        ${fileLoaded && "border-green-500"}
+        `}
         role="button"
         aria-label="Arraste e solte o CSV ou clique para selecionar"
       >
-        {/* ícone */}
-        <svg
-          width="44"
-          height="44"
-          viewBox="0 0 24 24"
-          fill="none"
-          className="flex-shrink-0 text-slate-600"
-        >
-          <path
-            d="M12 3v9"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M5 12l7-9 7 9"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M21 21H3"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {icon}
 
         <div>
-          <div className="text-sm text-slate-800 font-semibold">
-            Arraste e solte seu CSV
-          </div>
-          <div className="text-xs text-slate-500">
-            Ou clique para escolher o arquivo — suporta campos entre aspas
-          </div>
+          <div className="text-xl text-slate-800 font-bold">{title}</div>
+          <>
+            <div className="text-sm text-slate-800 font-semibold">
+              Arraste e solte seu CSV
+            </div>
+            <div className="text-xs text-slate-500">
+              Ou clique para escolher o arquivo — suporta campos entre aspas
+            </div>
+            {fileLoaded && (
+              <div className="flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+                {fileName} <BadgeCheckIcon className="text-green-400" />
+              </div>
+            )}
+          </>
         </div>
       </div>
 
