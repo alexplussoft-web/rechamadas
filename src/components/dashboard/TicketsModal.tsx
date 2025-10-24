@@ -7,6 +7,7 @@ import { TicketCard } from "../operators/TicketCard";
 import { FiltrosTickets } from "../operators/FiltrosTickets";
 import { TicketDetalhes } from "../operators/TicketDetalhes";
 import type { TicketCategoria, TicketInfo } from "@/types/csvTypes";
+import { classificacoesNiveis } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -27,6 +28,7 @@ export function TicketsModal({
   const [filtroCategoria, setFiltroCategoria] = useState("");
   const [filtroClassificacao, setFiltroClassificacao] = useState("");
   const [filtroAssunto, setFiltroAssunto] = useState("");
+  const [filtroNivel, setFiltroNivel] = useState("all");
 
   const categoriasPorTicket = categorias?.reduce<
     Record<string, TicketCategoria[]>
@@ -43,12 +45,15 @@ export function TicketsModal({
   const ticketsFiltrados = useMemo(() => {
     return tickets.filter((t) => {
       const infos = categoriasPorTicket?.[t.id]?.filter((c) => {
+        const nivelCategoria = classificacoesNiveis[c.classificacao] ?? null;
+
         return (
-          (!filtroCategoria ||
+          (filtroCategoria === "all" ||
             c.categoria
               .toLowerCase()
               .includes(filtroCategoria.toLowerCase())) &&
-          (!filtroClassificacao ||
+          (filtroNivel === "all" || Number(filtroNivel) === nivelCategoria) &&
+          (filtroClassificacao === "all" ||
             c.classificacao
               .toLowerCase()
               .includes(filtroClassificacao.toLowerCase())) &&
@@ -64,6 +69,7 @@ export function TicketsModal({
     filtroCategoria,
     filtroClassificacao,
     filtroAssunto,
+    filtroNivel,
   ]);
 
   const copiarTicket = async (ticket: string) => {
@@ -115,6 +121,8 @@ export function TicketsModal({
           setFiltroAssunto={setFiltroAssunto}
           categoriasUnicas={categoriasUnicas}
           classificacoesUnicas={classificacoesUnicas}
+          filtroNivel={filtroNivel}
+          setFiltroNivel={setFiltroNivel}
         />
         {categorias && (
           <motion.div

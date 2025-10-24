@@ -62,7 +62,7 @@ export function Footer() {
         </a>
 
         {/* Tooltip da versão */}
-        <Tooltip content="Versão 1.0.5">
+        <Tooltip content="Versão 1.1.0">
           <Info className="w-4 h-4 text-slate-400 dark:text-slate-500 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 transition" />
         </Tooltip>
       </div>

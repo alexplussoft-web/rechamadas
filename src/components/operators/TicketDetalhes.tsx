@@ -10,6 +10,7 @@ export function TicketDetalhes({
   filtroCategoria,
   filtroClassificacao,
   filtroAssunto,
+  filtroNivel,
 }: any) {
   const IndicadorNivel = ({ nivel }: { nivel: number }) => (
     <Tooltip content={`Nível ${nivel}`}>
@@ -34,8 +35,15 @@ export function TicketDetalhes({
         const infos =
           categoriasPorTicket?.[t.id]?.filter((c: TicketCategoria) => {
             return (
-              (!filtroCategoria || c.categoria === filtroCategoria) &&
+              (!filtroCategoria ||
+                filtroCategoria === "all" ||
+                c.categoria === filtroCategoria) &&
+              (!filtroNivel ||
+                filtroNivel === "all" ||
+                classificacoesNiveis[c.classificacao] ===
+                  Number(filtroNivel)) &&
               (!filtroClassificacao ||
+                filtroClassificacao === "all" ||
                 c.classificacao === filtroClassificacao) &&
               (!filtroAssunto ||
                 c.assunto.toLowerCase().includes(filtroAssunto.toLowerCase()))
