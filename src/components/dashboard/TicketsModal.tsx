@@ -129,11 +129,17 @@ export function TicketsModal({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-800 p-4 rounded-xl"
+            className="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-800 p-2 rounded-xl"
           >
             <h3 className="border-b pb-2 flex items-center justify-center gap-2 text-md font-semibold text-zinc-800 dark:text-green-300 mb-2">
-              <Info className="text-blue-500 animate-pulse" /> Detalhes
+              <Info className="text-blue-600 animate-pulse" /> Detalhes
             </h3>
+            {/* ✅ Mostrar quantidade de tickets filtrados */}
+            <div className="text-xs text-muted-foreground mb-2">
+              {ticketsFiltrados.length} ticket
+              {ticketsFiltrados.length === 1 ? "" : "s"} encontrado
+              {ticketsFiltrados.length === 1 ? "" : "s"}
+            </div>
             <TicketDetalhes
               tickets={ticketsFiltrados}
               categoriasPorTicket={categoriasPorTicket}
